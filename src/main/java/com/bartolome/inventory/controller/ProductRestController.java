@@ -15,9 +15,14 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.bartolome.inventory.model.Product;
+import com.bartolome.inventory.response.CategoryResponseRest;
 import com.bartolome.inventory.response.ProductResponseRest;
 import com.bartolome.inventory.services.IProductService;
+import com.bartolome.inventory.util.CategoryExcelExporter;
+import com.bartolome.inventory.util.ProductExcelExporter;
 import com.bartolome.inventory.util.Util;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 @CrossOrigin(origins = {"http://localhost:4200"})
 @RestController
@@ -134,5 +139,28 @@ public class ProductRestController {
 		ResponseEntity<ProductResponseRest> response = productService.update(product, categoryID, id);
 		
 		return response;
+	}
+	
+	/**
+	 * exporta los productos a fichero excel
+	 * @param response
+	 * @throws IOException
+	 */
+	@GetMapping("/products/export/excel")
+	public void exportToExcel(HttpServletResponse response) throws IOException {
+		
+		response.setContentType("application/octet-stream");
+		
+		String headerKey = "Content-Disposition";
+		String headerValue = "attachment; filename=result_product.xlsx";
+		response.setHeader(headerKey, headerValue);
+		
+		ResponseEntity<ProductResponseRest> products = productService.search();
+		
+		ProductExcelExporter excelExporter = new ProductExcelExporter(
+				products.getBody().getProduct().getProducts());
+		
+		excelExporter.export(response);
+		
 	}
 }
